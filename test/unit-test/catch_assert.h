@@ -54,7 +54,7 @@ static void catchHandler_( int signal )
     longjmp( CATCH_JMPBUF, signal );
 }
 #pragma GCC diagnostic pop
-
+/* clang-format off */
 #define catch_assert( x )                    \
     do                                       \
     {                                        \
@@ -78,5 +78,5 @@ static void catchHandler_( int signal )
         close( saveFd );                     \
         TEST_ASSERT_EQUAL( try, catch );     \
     } while( 0 )
-
+/* clang-format on */
 #endif /* ifndef CATCH_ASSERT_H_ */
