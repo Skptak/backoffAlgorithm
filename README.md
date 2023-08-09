@@ -1,5 +1,7 @@
 ## backoffAlgorithm Library
 
+**[API Documentation Pages for current and previous releases of this library can be found here](https://freertos.github.io/backoffAlgorithm/)**
+
 This repository contains the backoffAlgorithm library, a utility library to
 calculate backoff period using an exponential backoff with jitter algorithm for
 retrying network operations (like failed network connection with server). This
