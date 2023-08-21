@@ -32,7 +32,7 @@ jobs:
           echo ${EXCLUDE[@]} | xargs lcov --rc lcov_branch_coverage=1 -r build/coverage.info -o build/coverage.info
           lcov --rc lcov_branch_coverage=1 --list build/coverage.info
       - name: Check Coverage
-        uses: FreeRTOS/CI-CD-Github-Actions/coverage-cop@CI-CD-Overhaul
+        uses: FreeRTOS/CI-CD-Github-Actions/coverage-cop@v2
         with:
           coverage-file: ./build/coverage.info
   build-code-example:
@@ -49,7 +49,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Check complexity
-        uses: FreeRTOS/CI-CD-Github-Actions/complexity@CI-CD-Overhaul
+        uses: FreeRTOS/CI-CD-Github-Actions/complexity@v2
         with:
           path: ./
   doxygen:
@@ -57,7 +57,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Run doxygen build
-        uses: FreeRTOS/CI-CD-Github-Actions/doxygen@CI-CD-Overhaul
+        uses: FreeRTOS/CI-CD-Github-Actions/doxygen@v2
         with:
           path: ./
   spell-check:
@@ -66,7 +66,7 @@ jobs:
       - name: Clone This Repo
         uses: actions/checkout@v3
       - name: Run spellings check
-        uses: FreeRTOS/CI-CD-GitHub-Actions/rust-spell-check@CI-CD-Overhaul
+        uses: FreeRTOS/CI-CD-GitHub-Actions/rust-spell-check@v2
         with:
           path: ./
   formatting:
@@ -74,7 +74,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Check formatting
-        uses: FreeRTOS/CI-CD-Github-Actions/formatting@CI-CD-Overhaul
+        uses: FreeRTOS/CI-CD-Github-Actions/formatting@v2
         with:
           path: ./
   git-secrets:
@@ -118,7 +118,7 @@ jobs:
         with:
           python-version: "3.11.0"
       - name: Measure sizes
-        uses: FreeRTOS/CI-CD-Github-Actions/memory_statistics@CI-CD-Overhaul
+        uses: FreeRTOS/CI-CD-Github-Actions/memory_statistics@v2
         with:
           config: .github/memory_statistics_config.json
           check_against: docs/doxygen/include/size_table.md
@@ -130,7 +130,7 @@ jobs:
       - name: Check Links
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        uses: FreeRTOS/CI-CD-Github-Actions/link-verifier@CI-CD-Overhaul
+        uses: FreeRTOS/CI-CD-Github-Actions/link-verifier@v2
         with:
           path: ./
 
@@ -143,7 +143,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run manifest verifier
-        uses: FreeRTOS/CI-CD-GitHub-Actions/manifest-verifier@CI-CD-Overhaul
+        uses: FreeRTOS/CI-CD-GitHub-Actions/manifest-verifier@v2
         with:
           path: ./
           fail-on-incorrect-version: true
