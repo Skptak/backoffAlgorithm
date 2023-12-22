@@ -1,4 +1,4 @@
-name: Test Raspberry PI QEMU Custom Build
+name: Test Raspberry PI QEMU Docker File
 
 on:
   push:
@@ -45,7 +45,6 @@ jobs:
           # ${{ env.stepName }}
           echo -e "::group::${{ env.bashInfo }} ${{ env.stepName}} ${{ env.bashEnd }}"
           sudo apt-get install -y qemu-system-aarch64 sshpass
-          wget https://downloads.raspberrypi.org/raspios_arm64/images/raspios_arm64-2023-05-03/2023-05-03-raspios-bullseye-arm64.img.xz
           echo -e "::endgroup::"
 
       - env:
@@ -55,14 +54,7 @@ jobs:
         run: |
           # ${{ env.stepName }}
           echo -e "::group::${{ env.bashInfo }}  ${{ env.stepName }} ${{ env.bashEnd }}"
-          xz -d 2023-05-03-raspios-bullseye-arm64.img.xz
-          sudo mkdir /mnt/image
-          sudo mount -o loop,offset=4194304 ./2023-05-03-raspios-bullseye-arm64.img /mnt/image/
-          cp /mnt/image/bcm2710-rpi-3-b-plus.dtb .
-          cp /mnt/image/kernel8.img .
-          echo 'admin:password' | sudo tee /mnt/image/userconf
-          sudo touch /mnt/image/ssh
-          qemu-img resize ./2023-05-03-raspios-bullseye-arm64.img 8G
+          docker pull stawiski/qemu-raspberrypi-3b:2023-05-03-raspios-bullseye-arm64
           echo -e "::endgroup::"
 
       - env:
@@ -73,11 +65,6 @@ jobs:
           # ${{ env.stepName }}
           # echo -e "::group::${{ env.bashInfo }} Launch Qemu ${{ env.bashEnd }}"
           echo -e "About to run the qemu command"
-          qemu-system-aarch64 -machine raspi3b -cpu cortex-a72 -nographic \
-            -dtb bcm2710-rpi-3-b-plus.dtb -m 1G -smp 4 -kernel kernel8.img \
-            -sd 2023-05-03-raspios-bullseye-arm64.img \
-            -append "rw earlyprintk loglevel=8 console=ttyAMA0,115200 dwc_otg.lpm_enable=0 root=/dev/mmcblk0p2 rootdelay=1" \
-            -device usb-net,netdev=net0 -netdev user,id=net0,hostfwd=tcp::2222-:22 -s -S
-          # echo -e "::endgroup::"
+          docker run -it --rm -p 2222:2222 stawiski/qemu-raspberrypi-3b:2023-05-03-raspios-bullseye-arm64s
           echo -e "Past the build command"
-          sshpass -p password ssh -p 2222 admin@localhost
+          sshpass -p raspberry ssh -p 2222 pi@localhost
