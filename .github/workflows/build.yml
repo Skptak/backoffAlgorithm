@@ -1,0 +1,85 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - '*'
+  workflow_dispatch:
+
+env:
+  PACKAGE_NAME: my-test-packaged
+  bashPass:   \033[32;1mPASSED -
+  bashInfo:   \033[33;1mINFO -
+  bashFail:   \033[31;1mFAILED -
+  bashEnd:    \033[0m
+
+jobs:
+  build:
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            setup: QEMU
+            c_compiler: arm-none-eabi-gcc
+            cpp_compiler: arm-none-eabi-g++
+            build_type: Debug
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Clone the repo
+        uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        if: ${{ matrix.os == 'ubuntu-22.04' && matrix.setup == 'QEMU' }}
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - env:
+          stepName: Install QEMU Dependencies
+        name: ${{ env.stepName }}
+        if: ${{ matrix.os == 'ubuntu-22.04' && matrix.setup == 'QEMU' }}
+        run: |
+          # ${{ env.stepName }}
+          echo -e "::group::${{ env.bashInfo }} ${{ env.stepName}} ${{ env.bashEnd }}"
+          cd ~/
+          sudo apt-get install -y qemu-system-aarch64
+          wget https://downloads.raspberrypi.org/raspios_arm64/images/raspios_arm64-2023-05-03/2023-05-03-raspios-bullseye-arm64.img.xz
+          echo -e "::endgroup::"
+
+      - env:
+          stepName: Set up QEMU Image
+        name: ${{ env.stepName }}
+        if: ${{ matrix.os == 'ubuntu-22.04' && matrix.setup == 'QEMU' }}
+        run: |
+          # ${{ env.stepName }}
+          echo -e "::group::${{ env.bashInfo }}  ${{ env.stepName }} ${{ env.bashEnd }}"
+          cd ~/
+          xz -d 2023-05-03-raspios-bullseye-arm64.img.xz
+          sudo mkdir /mnt/image
+          sudo mount -o loop,offset=4194304 ./2023-05-03-raspios-bullseye-arm64.img /mnt/image/
+          cp /mnt/image/bcm2710-rpi-3-b-plus.dtb ~
+          cp /mnt/image/kernel8.img ~
+          echo 'pi:$6$rBoByrWRKMY1EHFy$ho.LISnfm83CLBWBE/yqJ6Lq1TinRlxw/ImMTPcvvMuUfhQYcMmFnpFXUPowjy2br1NA0IACwF9JKugSNuHoe0' | sudo tee /mnt/image/userconf
+          sudo touch /mnt/image/ssh
+          qemu-img resize ./2023-05-03-raspios-bullseye-arm64.img 8G
+          echo -e "::endgroup::"
+
+      - env:
+          stepName: Set up QEMU build
+        name: ${{ env.stepName }}
+        if: ${{ matrix.os == 'ubuntu-22.04' && matrix.setup == 'QEMU' }}
+        run: |
+          # ${{ env.stepName }}
+          # echo -e "::group::${{ env.bashInfo }} Launch Qemu ${{ env.bashEnd }}"
+          cd ~/
+          qemu-system-aarch64 -machine raspi3b -cpu cortex-a72 -nographic \
+            -dtb bcm2710-rpi-3-b-plus.dtb -m 1G -smp 4 -kernel kernel8.img \
+            -sd 2023-05-03-raspios-bullseye-arm64.img \
+            -append "rw earlyprintk loglevel=8 console=ttyAMA0,115200 dwc_otg.lpm_enable=0 root=/dev/mmcblk0p2 rootdelay=1" \
+            -device usb-net,netdev=net0 -netdev user,id=net0,hostfwd=tcp::2222-:22 -s -S
+          # echo -e "::endgroup::"
+          echo -e "Past the build command"
+          ssh -p 2222 pi@localhost
